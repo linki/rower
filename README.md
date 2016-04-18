@@ -70,6 +70,67 @@ where servers and not containers are the first-class citizens.
     [Amazon EC2 EBS backed AMI](https://github.com/andsens/bootstrap-vz#amazon-ec2-ebs-backed-ami)
     documentation shows which dependencies you probably need.
 
+## Packer and CoreOS
+
+Modify `settings.json` to your needs and build the image with packer:
+
+```
+packer build -var-file=settings.json packer.json
+==> googlecompute: Checking image does not exist...
+==> googlecompute: Creating temporary SSH key for instance...
+==> googlecompute: Creating instance...
+    googlecompute: Loading zone: europe-west1-d
+    googlecompute: Loading image: coreos-alpha-1010-1-0-v20160407 in project serious-habitat-123456
+    googlecompute: Loading machine type: n1-standard-1
+    googlecompute: Loading network: default
+    googlecompute: Requesting instance creation...
+    googlecompute: Waiting for creation operation to complete...
+    googlecompute: Instance has been created!
+==> googlecompute: Waiting for the instance to become running...
+    googlecompute: IP: 23.251.143.83
+==> googlecompute: Waiting for SSH to become available...
+==> googlecompute: Connected to SSH!
+==> googlecompute: Uploading kubelet.service => /tmp/kube-kubelet.service
+==> googlecompute: Provisioning with shell script: /var/folders/bx/5fs4s3t51yl6jyy6s63mzjs9gmnv4l/T/packer-shell017516534
+    googlecompute: Created symlink from /etc/systemd/system/multi-user.target.wants/etcd2.service to /usr/lib64/systemd/system/etcd2.service.
+    googlecompute: Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib64/systemd/system/docker.service.
+    googlecompute: Created symlink from /etc/systemd/system/multi-user.target.wants/kube-kubelet.service to /etc/systemd/system/kube-kubelet.service.
+==> googlecompute: Deleting instance...
+    googlecompute: Instance has been deleted!
+==> googlecompute: Creating image...
+==> googlecompute: Deleting disk...
+    googlecompute: Disk has been deleted!
+Build 'googlecompute' finished.
+
+==> Builds finished. The artifacts of successful builds are:
+--> googlecompute: A disk image was created: coreos-rower-v20160418
+```
+
+Spin up an instance using the image providing a kube spec as metadata:
+
+```
+gcloud compute --project "serious-habitat-123456" instances create "coreos-rower-test" \
+  --metadata-from-file kube-pods=example-userdata.yaml \
+  --image "/serious-habitat-123456/coreos-rower-v20160418" \
+  --zone "europe-west1-d" \
+  --machine-type "n1-standard-1" \
+  --network "default" \
+  --maintenance-policy "MIGRATE" \
+  --scopes default="https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring.write","https://www.googleapis.com/auth/cloud.useraccounts.readonly" \
+  --boot-disk-size "10" \
+  --boot-disk-type "pd-ssd" \
+  --boot-disk-device-name "coreos-rower-test"
+```
+
+Login to your instance to see the pod running:
+
+```
+core@coreos-rower-test ~ $ docker ps
+CONTAINER ID        IMAGE                                  COMMAND                  CREATED             STATUS              PORTS                NAMES
+4f508375581d        nginx                                  "nginx -g 'daemon off"   8 minutes ago       Up 8 minutes                             k8s_webserver.cbef00d7_example-coreos-rower-test.c.serious-habitat-123456.internal_default_2688346410a632b665b5c91a9c5e0f0b_051ecc79
+9ad419a12f0f        gcr.io/google_containers/pause:0.8.0   "/pause"                 8 minutes ago       Up 8 minutes        0.0.0.0:80->80/tcp   k8s_POD.b8dc0109_example-coreos-rower-test.c.serious-habitat-123456.internal_default_2688346410a632b665b5c91a9c5e0f0b_71cf358f
+```
+̨
 ## License
 
 Copyright (c) 2016, Tobias Sarnowski

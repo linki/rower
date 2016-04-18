@@ -5,8 +5,9 @@ Requires=docker.service
 After=docker.service
 
 [Service]
-ExecStart=/usr/local/sbin/kubelet \
-  --manifest-url=http://169.254.169.254/latest/user-data \
+ExecStart=/usr/bin/kubelet \
+  --manifest-url=http://metadata/computeMetadata/v1/instance/attributes/kube-pods \
+  --manifest-url-header="Metadata-Flavor: Google" \
   --allow-privileged=true \
   --address=127.0.0.1 \
   --v=0
