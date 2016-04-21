@@ -70,48 +70,14 @@ where servers and not containers are the first-class citizens.
     [Amazon EC2 EBS backed AMI](https://github.com/andsens/bootstrap-vz#amazon-ec2-ebs-backed-ami)
     documentation shows which dependencies you probably need.
 
-## Packer and CoreOS
+## Rower on CoreOS
 
-Modify `settings.json` to your needs and build the image with packer:
-
-```
-packer build -var-file=settings.json packer.json
-==> googlecompute: Checking image does not exist...
-==> googlecompute: Creating temporary SSH key for instance...
-==> googlecompute: Creating instance...
-    googlecompute: Loading zone: europe-west1-d
-    googlecompute: Loading image: coreos-alpha-1010-1-0-v20160407 in project serious-habitat-123456
-    googlecompute: Loading machine type: n1-standard-1
-    googlecompute: Loading network: default
-    googlecompute: Requesting instance creation...
-    googlecompute: Waiting for creation operation to complete...
-    googlecompute: Instance has been created!
-==> googlecompute: Waiting for the instance to become running...
-    googlecompute: IP: 23.251.143.83
-==> googlecompute: Waiting for SSH to become available...
-==> googlecompute: Connected to SSH!
-==> googlecompute: Uploading kubelet.service => /tmp/kube-kubelet.service
-==> googlecompute: Provisioning with shell script: /var/folders/bx/5fs4s3t51yl6jyy6s63mzjs9gmnv4l/T/packer-shell017516534
-    googlecompute: Created symlink from /etc/systemd/system/multi-user.target.wants/etcd2.service to /usr/lib64/systemd/system/etcd2.service.
-    googlecompute: Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib64/systemd/system/docker.service.
-    googlecompute: Created symlink from /etc/systemd/system/multi-user.target.wants/kube-kubelet.service to /etc/systemd/system/kube-kubelet.service.
-==> googlecompute: Deleting instance...
-    googlecompute: Instance has been deleted!
-==> googlecompute: Creating image...
-==> googlecompute: Deleting disk...
-    googlecompute: Disk has been deleted!
-Build 'googlecompute' finished.
-
-==> Builds finished. The artifacts of successful builds are:
---> googlecompute: A disk image was created: coreos-rower-v20160418
-```
-
-Spin up an instance using the image providing a kube spec as metadata:
+Spin up a CoreOS instance, provide a cloud config as well as a kube spec as metadata:
 
 ```
 gcloud compute --project "serious-habitat-123456" instances create "coreos-rower-test" \
-  --metadata-from-file kube-pods=example-userdata.yaml \
-  --image "/serious-habitat-123456/coreos-rower-v20160418" \
+  --metadata-from-file "user-data=cloud-config.yml","kube-pods=example-userdata.yaml" \
+  --image "/coreos-cloud/coreos-alpha-1010-1-0-v20160407" \
   --zone "europe-west1-d" \
   --machine-type "n1-standard-1" \
   --network "default" \

@@ -1,0 +1,17 @@
+#cloud-config
+
+coreos:
+  units:
+  - name: etcd2.service
+    command: start
+
+  - name: docker.service
+    command: start
+
+  - name: kubelet.service
+    command: start
+    drop-ins:
+    - name: 50-kubelet-opts.conf
+      content: |
+        [Service]
+        Environment="KUBELET_OPTS=--manifest-url=http://metadata/computeMetadata/v1/instance/attributes/kube-pods --manifest-url-header='Metadata-Flavor: Google'"
